@@ -48,11 +48,13 @@
 import { ref } from 'vue'
 import axios from 'axios'
 
+// State
 const url = ref('')
 const data = ref(null)
 const loading = ref(false)
 const error = ref('')
 
+// Download dan ambil data dari TikWM
 const download = async () => {
   error.value = ''
   data.value = null
@@ -67,9 +69,8 @@ const download = async () => {
   }
 
   try {
-    const proxiedUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://tikwm.com/api?url=${finalUrl}&hd=1`)}`
-
-    const res = await axios.get(proxiedUrl)
+    const apiUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://tikwm.com/api?url=${finalUrl}&hd=1`)}`
+    const res = await axios.get(apiUrl)
 
     if (res.data && res.data.data) {
       if (res.data.code === -1 && res.data.msg?.includes('Free Api Limit')) {
@@ -89,7 +90,7 @@ const download = async () => {
     }
   } catch (err) {
     console.error('Proxy error:', err.message)
-    error.value = 'Gagal mengambil data. Mungkin server sedang sibuk.'
+    error.value = 'Gagal mengambil data. Server mungkin sedang sibuk.'
   } finally {
     setTimeout(() => {
       loading.value = false
@@ -97,11 +98,17 @@ const download = async () => {
   }
 }
 
-// Fungsi paksa download (seperti Snaptik)
+// Paksa download dengan nama random
 const forceDownload = () => {
+  if (!data.value?.video) return
   const link = document.createElement('a')
   link.href = data.value.video
-  link.download = `${data.value.title || 'tiktok-video'}.mp4`
+
+  // Nama acak contoh: tiktok-chisato-ABDJ63.mp4
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase()
+  const filename = `tiktok-chisato-${random}.mp4`
+  link.setAttribute('download', filename)
+
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
