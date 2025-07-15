@@ -2,38 +2,36 @@
   <div class="w-full max-w-xl bg-white/10 p-6 rounded-2xl shadow-xl backdrop-blur-md">
     <h1 class="text-3xl font-bold text-center text-purple-400 mb-6">🎵 TikTok Downloader</h1>
 
-    <!-- Input -->
     <input
       v-model="url"
       placeholder="Tempel link TikTok di sini..."
       class="w-full px-4 py-3 rounded-xl bg-black/60 text-white focus:outline-none focus:ring-2 ring-purple-500 placeholder-gray-400"
     />
 
-    <!-- Tombol Download -->
     <button
       @click="download"
       :disabled="loading || !url"
       class="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-700 transition rounded-xl text-white font-bold disabled:opacity-50"
     >
-      {{ loading ? 'Memproses...' : 'Unduh Sekarang' }}
+      {{ loading ? 'Menunggu...' : 'Unduh Sekarang' }}
     </button>
 
-    <!-- Error -->
+    <a
+      href="https://kyluesky.netlify.app/tiktok"
+      target="_blank"
+      class="mt-3 block text-center text-sm text-blue-400 hover:underline"
+    >
+      Jika server ini error, gunakan website backup sementara
+    </a>
+
     <div v-if="error" class="text-red-500 mt-4 text-center">{{ error }}</div>
 
-    <!-- Hasil -->
     <div v-if="data" class="mt-6">
-      <video
-        class="rounded-xl w-full"
-        controls
-        :src="data.video"
-      ></video>
-
+      <video class="rounded-xl w-full" controls :src="data.video"></video>
       <div class="mt-4 text-sm text-gray-300 space-y-1">
         <p>👤 <strong>{{ data.author.nickname }}</strong> (@{{ data.author.unique_id }})</p>
         <p>📝 {{ data.title }}</p>
       </div>
-
       <a
         :href="data.video"
         download
@@ -59,30 +57,42 @@ const download = async () => {
   data.value = null
   loading.value = true
 
+  const finalUrl = url.value.trim()
+
+  if (!finalUrl.includes('tiktok.com')) {
+    error.value = 'Mohon masukkan URL TikTok yang valid.'
+    loading.value = false
+    return
+  }
+
   try {
-    const res = await axios.get('https://tikwm.com/api', {
-      params: {
-        url: url.value,
-        hd: 1
-      }
-    })
+    const proxiedUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://tikwm.com/api?url=${finalUrl}&hd=1`)}`
+
+    const res = await axios.get(proxiedUrl)
 
     if (res.data && res.data.data) {
-      data.value = {
-        video: res.data.data.play, // video tanpa watermark
-        title: res.data.data.title,
-        author: {
-          nickname: res.data.data.author.nickname,
-          unique_id: res.data.data.author.unique_id
+      if (res.data.code === -1 && res.data.msg?.includes('Free Api Limit')) {
+        error.value = 'Limit TikWM tercapai. Coba lagi dalam 1-2 detik.'
+      } else {
+        data.value = {
+          video: res.data.data.play,
+          title: res.data.data.title,
+          author: {
+            nickname: res.data.data.author.nickname,
+            unique_id: res.data.data.author.unique_id
+          }
         }
       }
     } else {
       error.value = 'Video tidak ditemukan atau link salah.'
     }
   } catch (err) {
-    error.value = 'Terjadi kesalahan saat mengambil data dari TikWM API.'
+    console.error('Proxy error:', err.message)
+    error.value = 'Gagal mengambil data. Mungkin server sedang sibuk.'
   } finally {
-    loading.value = false
+    setTimeout(() => {
+      loading.value = false
+    }, 1500)
   }
 }
 </script>
