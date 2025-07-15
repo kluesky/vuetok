@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Tambahan styling custom */
+body {
+  @apply bg-black text-white;
+  font-family: 'Rubik', sans-serif;
+  scroll-behavior: smooth;
+}
