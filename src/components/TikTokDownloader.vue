@@ -32,13 +32,14 @@
         <p>👤 <strong>{{ data.author.nickname }}</strong> (@{{ data.author.unique_id }})</p>
         <p>📝 {{ data.title }}</p>
       </div>
-      <a
-        :href="data.video"
-        download
-        class="mt-4 inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition"
+
+      <!-- Tombol download langsung -->
+      <button
+        @click="forceDownload"
+        class="mt-4 w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition"
       >
         Download Video 🎬
-      </a>
+      </button>
     </div>
   </div>
 </template>
@@ -94,5 +95,15 @@ const download = async () => {
       loading.value = false
     }, 1500)
   }
+}
+
+// Fungsi paksa download (seperti Snaptik)
+const forceDownload = () => {
+  const link = document.createElement('a')
+  link.href = data.value.video
+  link.download = `${data.value.title || 'tiktok-video'}.mp4`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 </script>
